@@ -2,7 +2,6 @@ import torch
 from typing import List, Any
 from torch import nn, Tensor
 from torch.nn import functional as F
-from pytorch_lightning import Trainer
 
 from models import BaseVae
 
