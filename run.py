@@ -1,19 +1,26 @@
+import torch
 from torch.utils.data import DataLoader
-from dataset import DATA_TRANSFORM, MnistDataset
 
 from models import VanillaVae
+from library import train_model
+from dataset import DATA_TRANSFORM, MnistDataset
 
 
 def main():
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # 数据处理
-    train_dataset = MnistDataset(image_dir='', transformer=DATA_TRANSFORM['train'])
-    val_dataset = MnistDataset(image_dir='', transformer=DATA_TRANSFORM['val'])
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=64, shuffle=True)
+    train_dir = "/data/Vae/Dataset/MNIST_data/train"
+    val_dir = "/data/Vae/Dataset//MNIST_data/test"
+    save_dir = "/data/Vae/Weight"
+    train_dataset = MnistDataset(image_dir=train_dir, transformer=DATA_TRANSFORM["train"])
+    val_dataset = MnistDataset(image_dir=val_dir, transformer=DATA_TRANSFORM["val"])
+    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=128, shuffle=True, num_workers=4)
 
     # 模型加载
-    model = VanillaVae(in_channels=3, latent_dim=128)
-
+    model = VanillaVae(in_channels=1, latent_dim=20)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0)
+    train_model(model, train_loader, val_loader, optimizer, 30, device, save_dir)
 
 if __name__ == '__main__':
     main()

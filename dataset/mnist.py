@@ -1,3 +1,6 @@
+import os
+
+from PIL import Image
 from pathlib import Path
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -6,16 +9,14 @@ from typing import Callable, Optional
 DATA_TRANSFORM = {
     'train': transforms.Compose(
         [
-            transforms.RandomHorizontalFlip(),
+            transforms.Resize([32, 32]),
             transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.456), (0.229, 0.224, 0.225))
         ]
     ),
     'val': transforms.Compose(
         [
-            transforms.RandomHorizontalFlip(),
+            transforms.Resize([32, 32]),
             transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.456), (0.229, 0.224, 0.225))
         ]
     )
 }
@@ -29,11 +30,14 @@ class MnistDataset(Dataset):
         self.images_path = [f for f in Path(image_dir).iterdir() if f.suffix in image_suffix]
 
     def __getitem__(self, index):
-        image = self.images_path[index]
+        image_path = self.images_path[index]
+        image = Image.open(image_path)
+        image_name = os.path.basename(image_path)
+        image_label = image_name.split('_')[0]
         if self.transformer:
             image = self.transformer(image)
 
-        return image
+        return image, int(image_label)
 
     def __len__(self):
         return len(self.images_path)

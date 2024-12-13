@@ -13,7 +13,7 @@ class VanillaVae(BaseVae):
 
         self.latent_dim = latent_dim
         if hidden_dims is None:
-            hidden_dims = [32, 64, 128, 256, 512]
+            hidden_dims = [32, 64, 128]
 
         # Build Encoder
         modules = []
@@ -28,11 +28,11 @@ class VanillaVae(BaseVae):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1] * 4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * 4, latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * 4 * 4, latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * 4 * 4, latent_dim)
 
         # Build Decoder
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4 * 4)
         hidden_dims.reverse()
 
         modules = []
@@ -52,7 +52,7 @@ class VanillaVae(BaseVae):
             nn.ConvTranspose2d(hidden_dims[-1], hidden_dims[-1], kernel_size=3, stride=2, padding=1, output_padding=1),
             nn.BatchNorm2d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_dims[-1], out_channels=3, kernel_size=3, padding=1),
+            nn.Conv2d(hidden_dims[-1], out_channels=1, kernel_size=3, padding=1),
             nn.Tanh()
         )
 
@@ -66,7 +66,7 @@ class VanillaVae(BaseVae):
 
     def decode(self, input_data: Tensor) -> Tensor:
         result = self.decoder_input(input_data)
-        result = result.view(-1, 512, 2, 2)
+        result = result.view(-1, 128, 4, 4)
         result = self.decoder(result)
         result = self.final_layer(result)
 
